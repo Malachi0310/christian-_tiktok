@@ -3,7 +3,16 @@ const API_KEY = 'AIzaSyDwrhYP7HU3_06rXJ9MoeSLR_Q-Oe-fSI4';
 const SEARCH_TERMS = [
   'Apostle Joshua Selman',
   'Apostle Joshua Selman Singing Give Me Oil In My Lamp ',
-  'Koinonia Worship'
+  'Koinonia Worship',
+  'Kathryn khulman',
+  'Babalola',
+  'Benson Idahosa',
+  'Myles Munrow',
+  'Here for you Emali',
+  'Benny Hinn',
+  'Rodney Horward',
+  'Kenith E Hagin',
+  'MY ONE DESIRE - Apostle Joshua Selman'
 ];
 
 const videoFeed = document.getElementById("videofeed");
