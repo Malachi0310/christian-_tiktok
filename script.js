@@ -9,9 +9,6 @@ const SEARCH_TERMS = [
   'Benson Idahosa',
   'Myles Munrow',
   'Here for you Emali',
-  'Benny Hinn',
-  'Rodney Horward',
-  'Kenith E Hagin',
   'MY ONE DESIRE - Apostle Joshua Selman'
 ];
 
