@@ -1,98 +1,92 @@
-const API_KEY = 'AIzaSyDwrhYP7HU3_06rXJ9MoeSLR_Q-Oe-fSI4';
+document.addEventListener("DOMContentLoaded", () => {
+  const videoFeed = document.getElementById("videofeed");
+  let currentVideoIndex = 0;
+  let isFetching = false;
+
+  const videoCards = [];
 
 const SEARCH_TERMS = [
-  'Apostle Joshua Selman',
-  'Apostle Joshua Selman Singing Give Me Oil In My Lamp ',
-  'Koinonia Worship',
-  'Kathryn khulman',
-  'Babalola',
-  'Benson Idahosa',
-  'Myles Munrow',
-  'Here for you Emali',
-  'MY ONE DESIRE - Apostle Joshua Selman'
+  "video (1).mp4", "video (2).mp4", "video (3).mp4", "video (4).mp4", "video (5).mp4",
+  "video (6).mp4", "video (7).mp4", "video (8).mp4", "video (9).mp4", "video (10).mp4",
+  "video (11).mp4", "video (12).mp4", "video (13).mp4", "video (14).mp4", "video (15).mp4",
+  "video (16).mp4", "video (17).mp4", "video (18).mp4", "video (19).mp4", "video (20).mp4",
+  "video (21).mp4", "video (22).mp4", "video (23).mp4", "video (24).mp4", "video (25).mp4",
+  "video (26).mp4", "video (27).mp4"
 ];
 
-const videoFeed = document.getElementById("videofeed");
-let isFetching = false;
+  function createVideoCard(fileName) {
+    const videoCard = document.createElement("div");
+    videoCard.classList.add("video-card");
 
-// Store iframe video IDs to reset them for pausing
-const videoCards = [];
+    videoCard.innerHTML = `
+      <video
+        src="videos/${fileName}"
+        controls
+        playsinline
+        preload="metadata"
+      ></video>
+    `;
 
-// Pick random term
-function getRandomTerm() {
-  return SEARCH_TERMS[Math.floor(Math.random() * SEARCH_TERMS.length)];
-}
+    videoFeed.appendChild(videoCard);
+    videoCards.push(videoCard);
+    observer.observe(videoCard);
+  }
 
-// Create video card
-function createVideoCard(videoId, title) {
-  const videoCard = document.createElement("div");
-  videoCard.classList.add("video-card");
+  // --- Observer: One plays with sound, rest pause ---
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const video = entry.target.querySelector("video");
 
-  videoCard.innerHTML = `
-    <iframe
-      src="https://www.youtube.com/embed/${videoId}?autoplay=0&playsinline=1&rel=0"
-      title="${title}"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen
-    ></iframe>
-  `;
+      if (!video) return;
 
-  videoFeed.appendChild(videoCard);
-  videoCards.push({ el: videoCard, id: videoId });
-  observer.observe(videoCard); // Observe when added
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
+        // Pause all other videos
+        document.querySelectorAll("video").forEach(v => {
+          if (v !== video) {
+            v.pause();
+          }
+        });
 
-  return videoCard;
-}
+        // Try playing with sound
+        video.muted = false;
+        const playPromise = video.play();
 
-// IntersectionObserver to control play/pause
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    const iframe = entry.target.querySelector('iframe');
-    const videoId = iframe.src.split("/embed/")[1]?.split("?")[0];
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            // If autoplay fails due to browser policy, mute and retry
+            video.muted = true;
+            video.play();
+          });
+        }
+      } else {
+        video.pause();
+      }
+    });
+  }, {
+    threshold: 0.75,
+    root: videoFeed
+  });
 
-    if (entry.isIntersecting && entry.intersectionRatio >= 0.75) {
-      // Play current video
-      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0`;
-    } else {
-      // Pause by resetting src (kills autoplay)
-      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=0&playsinline=1&rel=0`;
+  function fetchNextVideos() {
+    if (isFetching || currentVideoIndex >= SEARCH_TERMS.length) return;
+
+    isFetching = true;
+
+    const end = Math.min(currentVideoIndex + 3, SEARCH_TERMS.length);
+    for (let i = currentVideoIndex; i < end; i++) {
+      createVideoCard(SEARCH_TERMS[i]);
+    }
+
+    currentVideoIndex = end;
+    isFetching = false;
+  }
+
+  videoFeed.addEventListener("scroll", () => {
+    if (videoFeed.scrollTop + videoFeed.clientHeight >= videoFeed.scrollHeight - 150) {
+      fetchNextVideos();
     }
   });
-}, {
-  threshold: 0.75,
-  root: videoFeed
+
+  // Initial fetch
+  fetchNextVideos();
 });
-
-// Fetch and append
-function fetchAndAppendVideos() {
-  if (isFetching) return;
-  isFetching = true;
-
-  const term = getRandomTerm();
-  const API_URL = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&videoEmbeddable=true&maxResults=3&order=viewCount&q=${encodeURIComponent(term)}&key=${API_KEY}`;
-
-  fetch(API_URL)
-    .then(res => res.json())
-    .then(data => {
-      if (!data.items) return;
-      data.items.forEach(item => {
-        const videoId = item.id.videoId;
-        if (!videoId) return;
-        createVideoCard(videoId, item.snippet.title);
-      });
-    })
-    .catch(err => console.error("Fetch error:", err))
-    .finally(() => {
-      isFetching = false;
-    });
-}
-
-// Scroll listener
-videoFeed.addEventListener('scroll', () => {
-  if (videoFeed.scrollTop + videoFeed.clientHeight >= videoFeed.scrollHeight - 150) {
-    fetchAndAppendVideos();
-  }
-});
-
-// Load first batch
-fetchAndAppendVideos();
